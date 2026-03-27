@@ -320,7 +320,7 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET required_subs_completed = %s WHERE id = %s",
-                           (1 if completed else 0, user_id))
+                           (completed, user_id))
 
     def add_referral_bonus(self, referrer_id: int, referred_id: int, bonus: float):
         with self.get_connection() as conn:
@@ -422,7 +422,7 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO subscriptions (user_id, channel_id, rewarded) VALUES (%s, %s, %s) ON CONFLICT (user_id, channel_id) DO UPDATE SET rewarded=EXCLUDED.rewarded",
-                (user_id, channel_id, 1 if rewarded else 0)
+                (user_id, channel_id, rewarded)
             )
 
     def is_channel_subscribed(self, user_id: int, channel_id: str) -> bool:
@@ -444,7 +444,7 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE required_subscriptions SET subscribed = %s WHERE user_id = %s AND channel_link = %s",
-                (1 if subscribed else 0, user_id, channel_link)
+                (subscribed, user_id, channel_link)
             )
 
     def create_withdrawal(self, user_id: int, amount: float, wallet: str) -> int:
@@ -581,8 +581,8 @@ class Database:
             cursor.execute("""
                 INSERT INTO referral_required_subs 
                 (referrer_id, referred_id, channel_username, is_subscribed, bonus_given) 
-                VALUES (?, ?, ?, 1, ?)
-            """, (referrer_id, referred_id, channel_username, 1 if bonus_given else 0))
+                VALUES (%s, %s, %s, TRUE, %s)
+            """, (referrer_id, referred_id, channel_username, bonus_given))
 
     def update_referral_required_sub_status(self, referrer_id: int, referred_id: int, channel_username: str,
                                             is_subscribed: bool):
@@ -591,15 +591,15 @@ class Database:
             cursor.execute("""
                 UPDATE referral_required_subs 
                 SET is_subscribed = %s, last_checked = CURRENT_TIMESTAMP 
-                WHERE referrer_id = %s AND referred_id = %s AND channel_username = ?
-            """, (1 if is_subscribed else 0, referrer_id, referred_id, channel_username))
+                WHERE referrer_id = %s AND referred_id = %s AND channel_username = %s
+            """, (is_subscribed, referrer_id, referred_id, channel_username))
 
     def get_referral_required_sub_status(self, referrer_id: int, referred_id: int, channel_username: str) -> Optional[dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT is_subscribed, bonus_given FROM referral_required_subs 
-                WHERE referrer_id = %s AND referred_id = %s AND channel_username = ?
+                WHERE referrer_id = %s AND referred_id = %s AND channel_username = %s
             """, (referrer_id, referred_id, channel_username))
             row = cursor.fetchone()
             return dict(row) if row else None
@@ -631,7 +631,7 @@ class Database:
             cursor.execute("""
                 UPDATE referral_required_subs 
                 SET bonus_given = TRUE 
-                WHERE referrer_id = %s AND referred_id = %s AND channel_username = ?
+                WHERE referrer_id = %s AND referred_id = %s AND channel_username = %s
             """, (referrer_id, referred_id, channel_username))
 
 
