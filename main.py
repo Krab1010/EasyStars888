@@ -256,7 +256,7 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT link, username, position FROM required_channels WHERE is_active = 1 ORDER BY position"
+                "SELECT link, username, position FROM required_channels WHERE is_active = TRUE ORDER BY position"
             )
             return [dict(row) for row in cursor.fetchall()]
 
@@ -264,7 +264,7 @@ class Database:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT link, username, position FROM required_channels WHERE position = %s AND is_active = 1",
+                "SELECT link, username, position FROM required_channels WHERE position = %s AND is_active = TRUE",
                 (position,)
             )
             row = cursor.fetchone()
@@ -375,12 +375,12 @@ class Database:
     def ban_user(self, user_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET is_banned = 1 WHERE id = %s", (user_id,))
+            cursor.execute("UPDATE users SET is_banned = TRUE WHERE id = %s", (user_id,))
 
     def unban_user(self, user_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE users SET is_banned = 0 WHERE id = %s", (user_id,))
+            cursor.execute("UPDATE users SET is_banned = FALSE WHERE id = %s", (user_id,))
 
     def add_channel(self, channel_id: str, name: str, link: str, username: str, price: float = TASK_REWARD):
         with self.get_connection() as conn:
@@ -403,7 +403,7 @@ class Database:
             if include_inactive:
                 cursor.execute("SELECT * FROM channels ORDER BY created_at")
             else:
-                cursor.execute("SELECT * FROM channels WHERE is_active = 1 ORDER BY created_at")
+                cursor.execute("SELECT * FROM channels WHERE is_active = TRUE ORDER BY created_at")
             return [dict(row) for row in cursor.fetchall()]
 
     def toggle_channel(self, channel_id: str) -> bool:
@@ -571,7 +571,7 @@ class Database:
     def get_all_users_for_broadcast(self) -> List[int]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM users WHERE is_banned = 0")
+            cursor.execute("SELECT id FROM users WHERE is_banned = FALSE")
             return [row['id'] for row in cursor.fetchall()]
 
     def add_referral_required_sub(self, referrer_id: int, referred_id: int, channel_username: str,
@@ -630,7 +630,7 @@ class Database:
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE referral_required_subs 
-                SET bonus_given = 1 
+                SET bonus_given = TRUE 
                 WHERE referrer_id = %s AND referred_id = %s AND channel_username = ?
             """, (referrer_id, referred_id, channel_username))
 
