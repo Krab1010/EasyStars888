@@ -238,9 +238,9 @@ class Database:
                     (key, value)
                 )
 
-            cursor.execute("SELECT COUNT(*) FROM required_channels")
+            cursor.execute("SELECT COUNT(*) AS cnt FROM required_channels")
             row = cursor.fetchone()
-            count = row[0] if row else 0
+            count = row['cnt'] if row else 0
             if count == 0:
                 for i, ch in enumerate(DEFAULT_REQUIRED_CHANNELS):
                     cursor.execute(
