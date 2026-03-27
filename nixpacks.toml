@@ -1,8 +1,11 @@
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip"]
+nixPkgs = ["python311"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+  "python -m venv /opt/venv",
+  "/opt/venv/bin/pip install -r requirements.txt"
+]
 
 [start]
-cmd = "python main.py"
+cmd = "/opt/venv/bin/python main.py"
