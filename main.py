@@ -330,7 +330,7 @@ class Database:
                 (bonus, bonus, referrer_id)
             )
             cursor.execute(
-                "INSERT INTO referrals (referrer_id, referred_id, earned, bonus_given) VALUES (%s, %s, %s, 1)",
+                "INSERT INTO referrals (referrer_id, referred_id, earned, bonus_given) VALUES (%s, %s, %s, TRUE)",
                 (referrer_id, referred_id, bonus)
             )
 
@@ -2418,11 +2418,17 @@ async def main():
     logger.info("🚀 Easy Stars Bot запущен!")
     print("🚀 Easy Stars Bot запущен!")
 
-    asyncio.create_task(periodic_referral_check())
-    asyncio.create_task(run_web())
+    web_task = asyncio.create_task(run_web())
+    referral_task = asyncio.create_task(periodic_referral_check())
     try:
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        await dp.start_polling(
+            bot,
+            allowed_updates=dp.resolve_used_update_types(),
+            drop_pending_updates=True
+        )
     finally:
+        web_task.cancel()
+        referral_task.cancel()
         await bot.session.close()
 
 
